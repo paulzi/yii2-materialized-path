@@ -477,6 +477,9 @@ class MaterializedPathBehavior extends Behavior
                 if ($this->owner->getIsNewRecord()) {
                     throw new NotSupportedException('Method "' . $this->owner->className() . '::insert" is not supported for inserting new nodes.');
                 }
+                $item = $this->owner->getAttribute($this->itemAttribute);
+                $path = $this->getParentPath($this->owner->getAttribute($this->pathAttribute));
+                $this->owner->setAttribute($this->pathAttribute, $path . $this->delimiter . $item);
         }
     }
 
@@ -523,9 +526,7 @@ class MaterializedPathBehavior extends Behavior
      */
     public function afterUpdate($event)
     {
-        if ($this->operation !== null) {
-            $this->moveNode($event->changedAttributes);
-        }
+        $this->moveNode($event->changedAttributes);
         $this->operation = null;
         $this->node      = null;
     }
