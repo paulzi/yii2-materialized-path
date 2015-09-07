@@ -5,9 +5,9 @@
  * @license MIT (https://github.com/paulzi/yii2-materialized-path/blob/master/LICENSE)
  */
 
-namespace paulzi\materializedpath\pgsql;
+namespace paulzi\materializedPath\pgsql;
 
-use paulzi\materializedpath\MaterializedPathBehavior as BaseMaterializedPathBehavior;
+use paulzi\materializedPath\MaterializedPathBehavior as BaseMaterializedPathBehavior;
 
 /**
  * @author Alexey Rogachev <arogachev90@gmail.com>

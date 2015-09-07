@@ -21,7 +21,7 @@
   },
   "autoload": {
     "psr-4": {
-      "paulzi\\materializedpath\\": ""
+      "paulzi\\materializedPath\\": ""
     }
   }
 }
