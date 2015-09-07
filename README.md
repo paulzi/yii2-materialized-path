@@ -28,7 +28,7 @@ Sample migrations are in the folder `sample-migrations`:
 ## Configuring
 
 ```php
-use paulzi\materializedPath\MaterializedPathBehavior;
+use paulzi\materializedpath\MaterializedPathBehavior;
 
 class Sample extends \yii\db\ActiveRecord
 {
@@ -65,7 +65,7 @@ class Sample extends \yii\db\ActiveRecord
 Query class:
 
 ```php
-use paulzi\materializedPath\MaterializedPathQueryTrait;
+use paulzi\materializedpath\MaterializedPathQueryTrait;
 
 class SampleQuery extends \yii\db\ActiveQuery
 {

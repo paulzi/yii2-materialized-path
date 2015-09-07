@@ -5,7 +5,7 @@
  * @license MIT (https://github.com/paulzi/yii2-materialized-path/blob/master/LICENSE)
  */
 
-namespace paulzi\materializedPath\pgsql;
+namespace paulzi\materializedpath\pgsql;
 use yii\db\Expression;
 
 /**

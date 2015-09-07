@@ -5,7 +5,7 @@
  * @license MIT (https://github.com/paulzi/yii2-materialized-path/blob/master/LICENSE)
  */
 
-namespace paulzi\materializedPath;
+namespace paulzi\materializedpath;
 
 /**
  * @author PaulZi <pavel.zimakoff@gmail.com>
