@@ -111,7 +111,7 @@ class MaterializedPathBehavior extends Behavior
             $this->itemAttribute = $primaryKey[0];
             $this->primaryKeyMode = true;
         }
-        return parent::attach($owner);
+        parent::attach($owner);
     }
 
     /**
