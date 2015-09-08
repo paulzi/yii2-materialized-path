@@ -16,7 +16,7 @@ class m150828_150100_multiple_tree extends Migration
         $this->createTable('{{%multiple_tree}}', [
             'id'    => Schema::TYPE_PK,
             'tree'  => Schema::TYPE_INTEGER . ' NULL',
-            'path'  => Schema::TYPE_STRING . 'NULL',
+            'path'  => Schema::TYPE_STRING . ' NULL',
             'depth' => Schema::TYPE_INTEGER . ' NOT NULL',
             'sort'  => Schema::TYPE_INTEGER . ' NOT NULL',
         ], $tableOptions);

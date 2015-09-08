@@ -349,31 +349,6 @@ class MaterializedPathBehavior extends Behavior
     }
 
     /**
-     * Prepend to operation internal handler
-     * @throws Exception
-     */
-    protected function prependToInternal()
-    {
-        $this->checkNode(false);
-        $item = $this->owner->getAttribute($this->itemAttribute);
-
-        if ($item !== null) {
-            $path = $this->node->getAttribute($this->pathAttribute);
-            $this->owner->setAttribute($this->pathAttribute, $path . $this->delimiter . $item);
-        }
-
-        $this->owner->setAttribute($this->depthAttribute, $this->node->getAttribute($this->depthAttribute) + 1);
-
-        if ($this->sortAttribute !== null) {
-            $to = $this->node->getChildren()
-                ->orderBy(null)
-                ->min($this->sortAttribute);
-            $to = $to !== null ? $to - $this->step : 0;
-            $this->owner->setAttribute($this->sortAttribute, $to);
-        }
-    }
-
-    /**
      * @param ActiveRecord $node
      * @return ActiveRecord
      */
@@ -382,31 +357,6 @@ class MaterializedPathBehavior extends Behavior
         $this->operation = self::OPERATION_APPEND_TO;
         $this->node = $node;
         return $this->owner;
-    }
-
-    /**
-     * Append to operation internal handler
-     * @throws Exception
-     */
-    protected function appendToInternal()
-    {
-        $this->checkNode(false);
-        $item = $this->owner->getAttribute($this->itemAttribute);
-
-        if ($item !== null) {
-            $path = $this->node->getAttribute($this->pathAttribute);
-            $this->owner->setAttribute($this->pathAttribute, $path . $this->delimiter . $item);
-        }
-
-        $this->owner->setAttribute($this->depthAttribute, $this->node->getAttribute($this->depthAttribute) + 1);
-
-        if ($this->sortAttribute !== null) {
-            $to = $this->node->getChildren()
-                ->orderBy(null)
-                ->max($this->sortAttribute);
-            $to = $to !== null ? $to + $this->step : 0;
-            $this->owner->setAttribute($this->sortAttribute, $to);
-        }
     }
 
     /**
@@ -421,27 +371,6 @@ class MaterializedPathBehavior extends Behavior
     }
 
     /**
-     * Insert before operation internal handler
-     * @throws Exception
-     */
-    protected function insertBeforeInternal()
-    {
-        $this->checkNode(true);
-        $item = $this->owner->getAttribute($this->itemAttribute);
-
-        if ($item !== null) {
-            $path = $this->getParentPath($this->node->getAttribute($this->pathAttribute));
-            $this->owner->setAttribute($this->pathAttribute, $path . $this->delimiter . $item);
-        }
-
-        $this->owner->setAttribute($this->depthAttribute, $this->node->getAttribute($this->depthAttribute));
-
-        if ($this->sortAttribute !== null) {
-            $this->moveTo($this->node->getAttribute($this->sortAttribute) - 1, false);
-        }
-    }
-
-    /**
      * @param ActiveRecord $node
      * @return ActiveRecord
      */
@@ -450,27 +379,6 @@ class MaterializedPathBehavior extends Behavior
         $this->operation = self::OPERATION_INSERT_AFTER;
         $this->node = $node;
         return $this->owner;
-    }
-
-    /**
-     * Insert after operation internal handler
-     * @throws Exception
-     */
-    protected function insertAfterInternal()
-    {
-        $this->checkNode(true);
-        $item = $this->owner->getAttribute($this->itemAttribute);
-
-        if ($item !== null) {
-            $path = $this->getParentPath($this->node->getAttribute($this->pathAttribute));
-            $this->owner->setAttribute($this->pathAttribute, $path . $this->delimiter . $item);
-        }
-
-        $this->owner->setAttribute($this->depthAttribute, $this->node->getAttribute($this->depthAttribute));
-
-        if ($this->sortAttribute !== null) {
-            $this->moveTo($this->node->getAttribute($this->sortAttribute) + 1, true);
-        }
     }
 
     /**
@@ -517,20 +425,20 @@ class MaterializedPathBehavior extends Behavior
 
                 break;
             case self::OPERATION_PREPEND_TO:
-                $this->prependToInternal();
+                $this->insertIntoInternal(false);
 
                 break;
             case self::OPERATION_APPEND_TO:
-                $this->appendToInternal();
+                $this->insertIntoInternal(true);
 
                 break;
             case self::OPERATION_INSERT_BEFORE:
-                $this->insertBeforeInternal();
+                $this->insertNearInternal(false);
 
                 break;
 
             case self::OPERATION_INSERT_AFTER:
-                $this->insertAfterInternal();
+                $this->insertNearInternal(true);
 
                 break;
 
@@ -665,7 +573,7 @@ class MaterializedPathBehavior extends Behavior
      */
     protected function moveTo($to, $forward)
     {
-        $this->owner->setAttribute($this->sortAttribute, $to);
+        $this->owner->setAttribute($this->sortAttribute, $to + ($forward ? 1 : -1));
 
         $tableName = $this->owner->tableName();
         $path = $this->getParentPath($this->node->getAttribute($this->pathAttribute));
@@ -701,9 +609,68 @@ class MaterializedPathBehavior extends Behavior
                 'and',
                 ['like', "[[{$this->pathAttribute}]]", $like . '%', false],
                 ["[[{$this->depthAttribute}]]" => $this->node->getAttribute($this->depthAttribute)],
-                ['between', $this->sortAttribute, $forward ? $to : $unallocated, $forward ? $unallocated : $to],
+                ['between', $this->sortAttribute, $forward ? $to + 1 : $unallocated, $forward ? $unallocated : $to - 1],
             ]
         );
+    }
+
+    /**
+     * Append to operation internal handler
+     * @param bool $append
+     * @throws Exception
+     */
+    protected function insertIntoInternal($append)
+    {
+        $this->checkNode(false);
+        $item = $this->owner->getAttribute($this->itemAttribute);
+
+        if ($item !== null) {
+            $path = $this->node->getAttribute($this->pathAttribute);
+            $this->owner->setAttribute($this->pathAttribute, $path . $this->delimiter . $item);
+        }
+
+        $this->owner->setAttribute($this->depthAttribute, $this->node->getAttribute($this->depthAttribute) + 1);
+
+        if ($this->treeAttribute !== null) {
+            $this->owner->setAttribute($this->treeAttribute, $this->node->getAttribute($this->treeAttribute));
+        }
+
+        if ($this->sortAttribute !== null) {
+            $to = $this->node->getChildren()->orderBy(null);
+            $to = $append ? $to->max($this->sortAttribute) : $to->min($this->sortAttribute);
+            if ($to !== null) {
+                $to += $append ? $this->step : -$this->step;
+            } else {
+                $to = 0;
+            }
+            $this->owner->setAttribute($this->sortAttribute, $to);
+        }
+    }
+
+    /**
+     * Insert operation internal handler
+     * @param bool $forward
+     * @throws Exception
+     */
+    protected function insertNearInternal($forward)
+    {
+        $this->checkNode(true);
+        $item = $this->owner->getAttribute($this->itemAttribute);
+
+        if ($item !== null) {
+            $path = $this->getParentPath($this->node->getAttribute($this->pathAttribute));
+            $this->owner->setAttribute($this->pathAttribute, $path . $this->delimiter . $item);
+        }
+
+        $this->owner->setAttribute($this->depthAttribute, $this->node->getAttribute($this->depthAttribute));
+
+        if ($this->treeAttribute !== null) {
+            $this->owner->setAttribute($this->treeAttribute, $this->node->getAttribute($this->treeAttribute));
+        }
+
+        if ($this->sortAttribute !== null) {
+            $this->moveTo($this->node->getAttribute($this->sortAttribute), $forward);
+        }
     }
 
     /**

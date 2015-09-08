@@ -15,7 +15,7 @@ class m150828_150000_single_tree extends Migration
 
         $this->createTable('{{%single_tree}}', [
             'id'    => Schema::TYPE_PK,
-            'path'  => Schema::TYPE_STRING . 'NULL',
+            'path'  => Schema::TYPE_STRING . ' NULL',
             'depth' => Schema::TYPE_INTEGER . ' NOT NULL',
             'sort'  => Schema::TYPE_INTEGER . ' NOT NULL',
         ], $tableOptions);
