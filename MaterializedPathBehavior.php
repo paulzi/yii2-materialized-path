@@ -324,20 +324,6 @@ class MaterializedPathBehavior extends Behavior
     }
 
     /**
-     * Make root operation internal handler
-     */
-    protected function makeRootInternal()
-    {
-        $item = $this->owner->getAttribute($this->itemAttribute);
-
-        if ($item !== null) {
-            $this->owner->setAttribute($this->pathAttribute, $item);
-        }
-
-        $this->owner->setAttribute($this->depthAttribute, 0);
-    }
-
-    /**
      * @param ActiveRecord $node
      * @return ActiveRecord
      */
@@ -619,6 +605,24 @@ class MaterializedPathBehavior extends Behavior
                 ['between', $this->sortAttribute, $forward ? $to + 1 : $unallocated, $forward ? $unallocated : $to - 1],
             ]
         );
+    }
+
+    /**
+     * Make root operation internal handler
+     */
+    protected function makeRootInternal()
+    {
+        $item = $this->owner->getAttribute($this->itemAttribute);
+
+        if ($item !== null) {
+            $this->owner->setAttribute($this->pathAttribute, $item);
+        }
+
+        if ($this->sortAttribute !== null) {
+            $this->owner->setAttribute($this->sortAttribute, 0);
+        }
+
+        $this->owner->setAttribute($this->depthAttribute, 0);
     }
 
     /**
