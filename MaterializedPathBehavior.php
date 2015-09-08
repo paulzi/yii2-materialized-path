@@ -622,6 +622,14 @@ class MaterializedPathBehavior extends Behavior
             $this->owner->setAttribute($this->sortAttribute, 0);
         }
 
+        if ($this->treeAttribute !== null) {
+            if ($this->owner->getOldAttribute($this->treeAttribute) !== $this->owner->getAttribute($this->treeAttribute)) {
+                $this->owner->setAttribute($this->treeAttribute, $this->owner->getAttribute($this->treeAttribute));
+            } elseif (!$this->owner->getIsNewRecord()) {
+                $this->owner->setAttribute($this->treeAttribute, $this->owner->getPrimaryKey());
+            }
+        }
+
         $this->owner->setAttribute($this->depthAttribute, 0);
     }
 
@@ -704,35 +712,37 @@ class MaterializedPathBehavior extends Behavior
      */
     protected function moveNode($changedAttributes)
     {
-        if (!isset($changedAttributes[$this->pathAttribute])) {
-            return;
-        }
-        $path = $changedAttributes[$this->pathAttribute];
+        $path = isset($changedAttributes[$this->pathAttribute]) ? $changedAttributes[$this->pathAttribute] : $this->owner->getAttribute($this->pathAttribute);
         $like = strtr($path . $this->delimiter, ['%' => '\%', '_' => '\_', '\\' => '\\\\']);
-        $update = [
-            'path' => new Expression("CONCAT(:pathNew, SUBSTRING([[path]], LENGTH(:pathOld) + 1))"),
-        ];
+        $update = [];
         $condition = [
             'and',
             ['like', "[[{$this->pathAttribute}]]", $like . '%', false],
-            $this->treeCondition(),
         ];
         if ($this->treeAttribute !== null) {
-            if (isset($changedAttributes[$this->treeAttribute])) {
-                $update[] = [$this->treeAttribute => $this->owner->getAttribute($this->treeAttribute)];
-                $condition[] = ["[[{$this->treeAttribute}]]" => $changedAttributes[$this->treeAttribute]];
-            } else {
-                $condition[] = ["[[{$this->treeAttribute}]]" => $this->owner->getAttribute($this->treeAttribute)];
-            }
+            $tree = isset($changedAttributes[$this->treeAttribute]) ? $changedAttributes[$this->treeAttribute] : $this->owner->getAttribute($this->treeAttribute);
+            $condition[] = [$this->treeAttribute => $tree];
         }
+        $params = [];
+
+        if (isset($changedAttributes[$this->pathAttribute])) {
+            $update['path']     = new Expression("CONCAT(:pathNew, SUBSTRING([[path]], LENGTH(:pathOld) + 1))");
+            $params[':pathOld'] = $path;
+            $params[':pathNew'] = $this->owner->getAttribute($this->pathAttribute);
+        }
+
+        if ($this->treeAttribute !== null && isset($changedAttributes[$this->treeAttribute])) {
+            $update[$this->treeAttribute] = $this->owner->getAttribute($this->treeAttribute);
+        }
+
         if ($this->depthAttribute !== null && isset($changedAttributes[$this->depthAttribute])) {
             $delta = $this->owner->getAttribute($this->depthAttribute) - $changedAttributes[$this->depthAttribute];
             $update[$this->depthAttribute] = new Expression("[[{$this->depthAttribute}]]" . sprintf('%+d', $delta));
         }
-        $this->owner->updateAll($update, $condition, [
-            ':pathOld' => $path,
-            ':pathNew' => $this->owner->getAttribute($this->pathAttribute),
-        ]);
+
+        if (!empty($update)) {
+            $this->owner->updateAll($update, $condition, $params);
+        }
     }
 
     /**
