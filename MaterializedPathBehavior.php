@@ -579,20 +579,26 @@ class MaterializedPathBehavior extends Behavior
         $path = $this->getParentPath($this->node->getAttribute($this->pathAttribute));
         $like = strtr($path . $this->delimiter, ['%' => '\%', '_' => '\_', '\\' => '\\\\']);
 
+        $joinCondition = [
+            'and',
+            ['like', "n.[[{$this->pathAttribute}]]", $like . '%', false],
+            [
+                "n.[[{$this->depthAttribute}]]" => $this->node->getAttribute($this->depthAttribute),
+                "n.[[{$this->sortAttribute}]]"  => new Expression("{$tableName}.[[{$this->sortAttribute}]] " . ($forward ? '+' : '-') . " 1"),
+            ],
+        ];
+        if ($this->treeAttribute !== null) {
+            $joinCondition[] = ["n.[[{$this->treeAttribute}]]" => new Expression("{$tableName}.[[{$this->treeAttribute}]]")];
+        }
+
         $unallocated = (new Query())
             ->select("{$tableName}.[[{$this->sortAttribute}]]")
             ->from("{$tableName}")
-            ->leftJoin("{$tableName} n", [
-                'and',
-                ['like', "n.[[{$this->pathAttribute}]]", $like . '%', false],
-                [
-                    "n.[[{$this->depthAttribute}]]" => $this->node->getAttribute($this->depthAttribute),
-                    "n.[[{$this->sortAttribute}]]"  => new Expression("{$tableName}.[[{$this->sortAttribute}]] " . ($forward ? '+' : '-') . " 1"),
-                ],
-            ])
+            ->leftJoin("{$tableName} n", $joinCondition)
             ->where([
                 'and',
                 ['like', "{$tableName}.[[{$this->pathAttribute}]]", $like . '%', false],
+                $this->treeCondition(),
                 [$forward ? '>=' : '<=', "{$tableName}.[[{$this->sortAttribute}]]", $to],
                 [
                     "{$tableName}.[[{$this->depthAttribute}]]" => $this->node->getAttribute($this->depthAttribute),
@@ -608,6 +614,7 @@ class MaterializedPathBehavior extends Behavior
             [
                 'and',
                 ['like', "[[{$this->pathAttribute}]]", $like . '%', false],
+                $this->treeCondition(),
                 ["[[{$this->depthAttribute}]]" => $this->node->getAttribute($this->depthAttribute)],
                 ['between', $this->sortAttribute, $forward ? $to + 1 : $unallocated, $forward ? $unallocated : $to - 1],
             ]
@@ -704,6 +711,7 @@ class MaterializedPathBehavior extends Behavior
         $condition = [
             'and',
             ['like', "[[{$this->pathAttribute}]]", $like . '%', false],
+            $this->treeCondition(),
         ];
         if ($this->treeAttribute !== null) {
             if (isset($changedAttributes[$this->treeAttribute])) {
