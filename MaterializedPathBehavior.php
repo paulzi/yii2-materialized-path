@@ -573,6 +573,9 @@ class MaterializedPathBehavior extends Behavior
                 "n.[[{$this->sortAttribute}]]"  => new Expression("{$tableName}.[[{$this->sortAttribute}]] " . ($forward ? '+' : '-') . " 1"),
             ],
         ];
+        if (!$this->owner->getIsNewRecord()) {
+            $joinCondition[] = ['<>', "n.[[{$this->pathAttribute}]]", $this->owner->getAttribute($this->pathAttribute)];
+        }
         if ($this->treeAttribute !== null) {
             $joinCondition[] = ["n.[[{$this->treeAttribute}]]" => new Expression("{$tableName}.[[{$this->treeAttribute}]]")];
         }
