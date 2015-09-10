@@ -211,7 +211,10 @@ class MaterializedPathBehavior extends Behavior
         $query = $this->owner->find()
             ->andWhere($condition)
             ->andWhere($this->treeCondition())
-            ->addOrderBy(["{$tableName}.[[{$this->pathAttribute}]]" => SORT_ASC]);
+            ->addOrderBy([
+                "{$tableName}.[[{$this->depthAttribute}]]" => SORT_ASC,
+                "{$tableName}.[[{$this->sortAttribute}]]"  => SORT_ASC,
+            ]);
         $query->multiple = true;
 
         return $query;
@@ -258,6 +261,7 @@ class MaterializedPathBehavior extends Behavior
         $query = $this->owner->find()
             ->andWhere(['like', "{$tableName}.[[{$this->pathAttribute}]]", $like . '%', false])
             ->andWhere(["{$tableName}.[[{$this->depthAttribute}]]" => $this->owner->getAttribute($this->depthAttribute)])
+            ->andWhere(['<', "{$tableName}.[[{$this->sortAttribute}]]", $this->owner->getAttribute($this->sortAttribute)])
             ->andWhere($this->treeCondition())
             ->orderBy(["{$tableName}.[[{$this->sortAttribute}]]" => SORT_DESC])
             ->limit(1);
@@ -275,6 +279,7 @@ class MaterializedPathBehavior extends Behavior
         $query = $this->owner->find()
             ->andWhere(['like', "{$tableName}.[[{$this->pathAttribute}]]", $like . '%', false])
             ->andWhere(["{$tableName}.[[{$this->depthAttribute}]]" => $this->owner->getAttribute($this->depthAttribute)])
+            ->andWhere(['>', "{$tableName}.[[{$this->sortAttribute}]]", $this->owner->getAttribute($this->sortAttribute)])
             ->andWhere($this->treeCondition())
             ->orderBy(["{$tableName}.[[{$this->sortAttribute}]]" => SORT_ASC])
             ->limit(1);
@@ -500,7 +505,7 @@ class MaterializedPathBehavior extends Behavior
             throw new Exception('Method "'. $this->owner->className() . '::delete" is not supported for deleting root nodes.');
         }
         $this->owner->refresh();
-        if ($this->operation !== static::OPERATION_DELETE_ALL) {
+        if ($this->operation !== static::OPERATION_DELETE_ALL && !$this->primaryKeyMode) {
             /** @var self $parent */
             $parent =$this->getParent()->one();
             $slugs1 = $parent->getChildren()
@@ -521,11 +526,15 @@ class MaterializedPathBehavior extends Behavior
      */
     public function afterDelete()
     {
-        if ($this->operation !== static::OPERATION_DELETE_ALL && !$this->isLeaf()) {
-            $changedAttributes = $this->owner->getAttributes([$this->pathAttribute, $this->depthAttribute]);
-            $this->owner->setAttribute($this->pathAttribute, $this->getParentPath());
-            $this->owner->setAttribute($this->depthAttribute, $this->owner->getAttribute($this->depthAttribute) - 1);
-            $this->moveNode($changedAttributes);
+        if ($this->operation !== static::OPERATION_DELETE_ALL) {
+            foreach ($this->owner->children as $child) {
+                /** @var self $child */
+                if ($this->owner->next === null) {
+                    $child->appendTo($this->owner->parent)->save();
+                } else {
+                    $child->insertBefore($this->owner->next)->save();
+                }
+            }
         }
         $this->operation = null;
         $this->node      = null;
@@ -660,7 +669,12 @@ class MaterializedPathBehavior extends Behavior
         if ($this->sortAttribute !== null) {
             $to = $this->node->getChildren()->orderBy(null);
             $to = $append ? $to->max($this->sortAttribute) : $to->min($this->sortAttribute);
-            if ($to !== null) {
+            if (
+                !$this->owner->getIsNewRecord() && (int)$to === $this->owner->getAttribute($this->sortAttribute)
+                && !$this->owner->getDirtyAttributes([$this->pathAttribute])
+                && ($this->treeAttribute === null || !$this->owner->getDirtyAttributes([$this->treeAttribute]))
+            ) {
+            } elseif ($to !== null) {
                 $to += $append ? $this->step : -$this->step;
             } else {
                 $to = 0;
