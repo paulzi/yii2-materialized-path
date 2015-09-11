@@ -1,6 +1,11 @@
 # Yii2 Materialized Path Behavior
 
-Implementation of materialized path algorithm for storing the trees in DB tables.  
+Implementation of materialized path algorithm for storing the trees in DB tables.
+  
+[![Packagist Version](https://img.shields.io/packagist/v/paulzi/yii2-materialized-path.svg)](https://packagist.org/packages/paulzi/yii2-materialized-path)
+[![Code Coverage](https://img.shields.io/scrutinizer/coverage/g/paulzi/yii2-materialized-path/master.svg)](https://scrutinizer-ci.com/g/paulzi/yii2-materialized-path/?branch=master)
+[![Build Status](https://img.shields.io/travis/paulzi/yii2-materialized-path/master.svg)](https://travis-ci.org/paulzi/yii2-materialized-path)
+[![Total Downloads](https://img.shields.io/packagist/dt/paulzi/yii2-materialized-path.svg)](https://packagist.org/packages/paulzi/yii2-materialized-path)
 
 ## Install
 
