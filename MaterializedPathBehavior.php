@@ -209,6 +209,7 @@ class MaterializedPathBehavior extends Behavior
             ->addOrderBy([
                 "{$tableName}.[[{$this->depthAttribute}]]" => SORT_ASC,
                 "{$tableName}.[[{$this->sortAttribute}]]"  => SORT_ASC,
+                "{$tableName}.[[{$this->itemAttribute}]]"  => SORT_ASC,
             ]);
         $query->multiple = true;
 
@@ -232,7 +233,7 @@ class MaterializedPathBehavior extends Behavior
         $tableName = $this->owner->tableName();
         $condition = [
             'and',
-            ['like', "leaves.[[{$this->pathAttribute}]]",  new Expression("CONCAT({$tableName}.[[{$this->pathAttribute}]], :delimiter, '%')", [':delimiter' => $this->delimiter])],
+            ['like', "leaves.[[{$this->pathAttribute}]]",  new Expression($this->concatExpression(["{$tableName}.[[{$this->pathAttribute}]]", ':delimiter']), [':delimiter' => $this->delimiter . '%'])],
         ];
 
         if ($this->treeAttribute !== null) {
@@ -738,7 +739,7 @@ class MaterializedPathBehavior extends Behavior
         $params = [];
 
         if (isset($changedAttributes[$this->pathAttribute])) {
-            $update['path']     = new Expression("CONCAT(:pathNew, SUBSTRING([[path]], LENGTH(:pathOld) + 1))");
+            $update['path']     = new Expression($this->concatExpression([':pathNew', $this->substringExpression('[[path]]', 'LENGTH(:pathOld) + 1', 'LENGTH([[path]]) - LENGTH(:pathOld)')]));
             $params[':pathOld'] = $path;
             $params[':pathNew'] = $this->owner->getAttribute($this->pathAttribute);
         }
@@ -782,5 +783,25 @@ class MaterializedPathBehavior extends Behavior
         } else {
             return ["{$tableName}.[[{$this->treeAttribute}]]" => $this->owner->getAttribute($this->treeAttribute)];
         }
+    }
+
+    /**
+     * @param array $items
+     * @return string
+     */
+    protected function concatExpression($items)
+    {
+        if ($this->owner->getDb()->driverName === 'sqlite' || $this->owner->getDb()->driverName === 'pgsql') {
+            return implode(' || ', $items);
+        }
+        return 'CONCAT(' . implode(',', $items) . ')';
+    }
+
+    protected function substringExpression($string, $from, $length)
+    {
+        if ($this->owner->getDb()->driverName === 'sqlite') {
+            return "SUBSTR({$string}, {$from}, {$length})";
+        }
+        return "SUBSTRING({$string}, {$from}, {$length})";
     }
 }
