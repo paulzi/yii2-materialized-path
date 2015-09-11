@@ -192,24 +192,19 @@ class MaterializedPathBehavior extends Behavior
         $tableName = $this->owner->tableName();
         $path = $this->owner->getAttribute($this->pathAttribute);
         $like = strtr($path . $this->delimiter, ['%' => '\%', '_' => '\_', '\\' => '\\\\']);
-        $condition = [
-            'and',
-            ['like', "{$tableName}.[[{$this->pathAttribute}]]", $like . '%', false],
-        ];
+
+        $query = $this->owner->find()
+            ->andWhere(['like', "{$tableName}.[[{$this->pathAttribute}]]", $like . '%', false]);
+
         if ($andSelf) {
-            $condition = [
-                'or',
-                ["{$tableName}.[[{$this->pathAttribute}]]" => $path],
-                $condition,
-            ];
+            $query->orWhere(["{$tableName}.[[{$this->pathAttribute}]]" => $path]);
         }
 
         if ($depth !== null) {
-            $condition[] = ['<=', "{$tableName}.[[{$this->depthAttribute}]]", $this->owner->getAttribute($this->depthAttribute) + $depth];
+            $query->andWhere(['<=', "{$tableName}.[[{$this->depthAttribute}]]", $this->owner->getAttribute($this->depthAttribute) + $depth]);
         }
 
-        $query = $this->owner->find()
-            ->andWhere($condition)
+        $query
             ->andWhere($this->treeCondition())
             ->addOrderBy([
                 "{$tableName}.[[{$this->depthAttribute}]]" => SORT_ASC,
