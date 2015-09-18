@@ -1,10 +1,18 @@
 <?php
+/**
+ * @link https://github.com/paulzi/yii2-materialized-path
+ * @copyright Copyright (c) 2015 PaulZi <pavel.zimakoff@gmail.com>
+ * @license MIT (https://github.com/paulzi/yii2-materialized-path/blob/master/LICENSE)
+ */
 
-namespace tests\migrations;
+namespace paulzi\materializedpath\tests\migrations;
 
 use yii\db\Schema;
 use yii\db\Migration;
 
+/**
+ * @author PaulZi <pavel.zimakoff@gmail.com>
+ */
 class TestMigration extends Migration
 {
     public function up()

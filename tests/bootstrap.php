@@ -1,4 +1,10 @@
 <?php
+/**
+ * @link https://github.com/paulzi/yii2-materialized-path
+ * @copyright Copyright (c) 2015 PaulZi <pavel.zimakoff@gmail.com>
+ * @license MIT (https://github.com/paulzi/yii2-materialized-path/blob/master/LICENSE)
+ */
+
 defined('YII_DEBUG') or define('YII_DEBUG', true);
 defined('YII_ENV') or define('YII_ENV', 'test');
 

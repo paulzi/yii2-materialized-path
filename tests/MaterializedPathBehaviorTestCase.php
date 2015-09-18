@@ -1,13 +1,21 @@
 <?php
+/**
+ * @link https://github.com/paulzi/yii2-materialized-path
+ * @copyright Copyright (c) 2015 PaulZi <pavel.zimakoff@gmail.com>
+ * @license MIT (https://github.com/paulzi/yii2-materialized-path/blob/master/LICENSE)
+ */
 
-namespace tests;
+namespace paulzi\materializedpath\tests;
 
-use tests\migrations\TestMigration;
-use tests\models\AttributeModeNode;
-use tests\models\MultipleTreeNode;
-use tests\models\Node;
+use paulzi\materializedpath\tests\migrations\TestMigration;
+use paulzi\materializedpath\tests\models\AttributeModeNode;
+use paulzi\materializedpath\tests\models\MultipleTreeNode;
+use paulzi\materializedpath\tests\models\Node;
 use Yii;
 
+/**
+ * @author PaulZi <pavel.zimakoff@gmail.com>
+ */
 class MaterializedPathBehaviorTestCase extends BaseTestCase
 {
     public function testGetParents()
@@ -165,7 +173,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
     public function testMakeRootInsert()
     {
         (new TestMigration())->up();
-        $dataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/empty.php'));
+        $dataSet = new ArrayDataSet(require(__DIR__ . '/data/empty.php'));
         $this->getDatabaseTester()->setDataSet($dataSet);
         $this->getDatabaseTester()->onSetUp();
 
@@ -185,7 +193,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->makeRoot()->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-make-root-insert.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-make-root-insert.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -201,7 +209,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->makeRoot()->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-make-root-update.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-make-root-update.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -217,7 +225,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->prependTo(MultipleTreeNode::findOne(1))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-prepend-to-insert-in-no-empty.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-prepend-to-insert-in-no-empty.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -233,7 +241,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->prependTo(MultipleTreeNode::findOne(22))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-prepend-to-insert-in-empty.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-prepend-to-insert-in-empty.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -249,7 +257,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->prependTo(MultipleTreeNode::findOne(1))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-prepend-to-update-same-node.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-prepend-to-update-same-node.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -265,7 +273,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->prependTo(MultipleTreeNode::findOne(19))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-prepend-to-update-deep.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-prepend-to-update-deep.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -281,7 +289,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->prependTo(MultipleTreeNode::findOne(1))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-prepend-to-update-out.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-prepend-to-update-out.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -297,7 +305,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->prependTo(MultipleTreeNode::findOne(2))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-prepend-to-update-another-tree.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-prepend-to-update-another-tree.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -313,7 +321,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->prependTo(MultipleTreeNode::findOne(1))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/data.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/data.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -365,7 +373,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->appendTo(MultipleTreeNode::findOne(1))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-append-to-insert-in-no-empty.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-append-to-insert-in-no-empty.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -381,7 +389,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->appendTo(MultipleTreeNode::findOne(22))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-append-to-insert-in-empty.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-append-to-insert-in-empty.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -397,7 +405,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->appendTo(MultipleTreeNode::findOne(1))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-append-to-update-same-node.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-append-to-update-same-node.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -413,7 +421,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->appendTo(MultipleTreeNode::findOne(19))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-append-to-update-deep.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-append-to-update-deep.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -429,7 +437,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->appendTo(MultipleTreeNode::findOne(1))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-append-to-update-out.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-append-to-update-out.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -445,7 +453,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->appendTo(MultipleTreeNode::findOne(2))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-append-to-update-another-tree.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-append-to-update-another-tree.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -461,7 +469,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->appendTo(MultipleTreeNode::findOne(1))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/data.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/data.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -513,7 +521,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->insertBefore(MultipleTreeNode::findOne(4))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-insert-before-insert-no-gap.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-insert-before-insert-no-gap.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -529,7 +537,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->insertBefore(MultipleTreeNode::findOne(10))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-insert-before-insert-gap.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-insert-before-insert-gap.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -545,7 +553,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->insertBefore(MultipleTreeNode::findOne(24))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-insert-before-insert-begin.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-insert-before-insert-begin.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -562,7 +570,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->insertBefore(MultipleTreeNode::findOne(4))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-insert-before-update-same-node.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-insert-before-update-same-node.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -578,7 +586,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->insertBefore(MultipleTreeNode::findOne(4))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/data.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/data.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -594,7 +602,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->insertBefore(MultipleTreeNode::findOne(10))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-insert-before-update-another-tree.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-insert-before-update-another-tree.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -646,7 +654,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->insertAfter(MultipleTreeNode::findOne(2))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-insert-after-insert-no-gap.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-insert-after-insert-no-gap.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -662,7 +670,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->insertAfter(MultipleTreeNode::findOne(11))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-insert-after-insert-gap.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-insert-after-insert-gap.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -678,7 +686,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->insertAfter(MultipleTreeNode::findOne(23))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-insert-after-insert-end.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-insert-after-insert-end.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -694,7 +702,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->insertAfter(MultipleTreeNode::findOne(2))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-insert-after-update-same-node.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-insert-after-update-same-node.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -710,7 +718,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->insertAfter(MultipleTreeNode::findOne(2))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/data.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/data.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -726,7 +734,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertTrue($node->insertAfter(MultipleTreeNode::findOne(11))->save());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-insert-after-update-another-tree.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-insert-after-update-another-tree.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -775,7 +783,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertEquals(1, MultipleTreeNode::findOne(3)->delete());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-delete.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-delete.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -805,7 +813,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertEquals(4, MultipleTreeNode::findOne(3)->deleteWithChildren());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-delete-with-children.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-delete-with-children.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
@@ -818,7 +826,7 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertEquals(13, MultipleTreeNode::findOne(1)->deleteWithChildren());
 
         $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
-        $expectedDataSet = new \PHPUnit_Extensions_Database_DataSet_ArrayDataSet(require(__DIR__ . '/data/test-delete-with-children-root.php'));
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-delete-with-children-root.php'));
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 

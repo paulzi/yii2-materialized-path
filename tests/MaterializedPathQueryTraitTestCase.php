@@ -1,12 +1,20 @@
 <?php
+/**
+ * @link https://github.com/paulzi/yii2-materialized-path
+ * @copyright Copyright (c) 2015 PaulZi <pavel.zimakoff@gmail.com>
+ * @license MIT (https://github.com/paulzi/yii2-materialized-path/blob/master/LICENSE)
+ */
 
-namespace tests;
+namespace paulzi\materializedpath\tests;
 
-use tests\models\Node;
-use tests\models\AttributeModeNode;
-use tests\models\MultipleTreeNode;
+use paulzi\materializedpath\tests\models\Node;
+use paulzi\materializedpath\tests\models\AttributeModeNode;
+use paulzi\materializedpath\tests\models\MultipleTreeNode;
 use Yii;
 
+/**
+ * @author PaulZi <pavel.zimakoff@gmail.com>
+ */
 class MaterializedPathQueryTraitTestCase extends BaseTestCase
 {
     public function testRoots()
