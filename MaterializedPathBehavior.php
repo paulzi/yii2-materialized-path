@@ -67,7 +67,7 @@ class MaterializedPathBehavior extends Behavior
     public $step = 100;
 
     /**
-     * @var string|null
+     * @var int|null
      */
     protected $operation;
 
@@ -668,7 +668,6 @@ class MaterializedPathBehavior extends Behavior
             if (
                 !$this->owner->getIsNewRecord() && (int)$to === $this->owner->getAttribute($this->sortAttribute)
                 && !$this->owner->getDirtyAttributes([$this->pathAttribute])
-                && ($this->treeAttribute === null || !$this->owner->getDirtyAttributes([$this->treeAttribute]))
             ) {
             } elseif ($to !== null) {
                 $to += $append ? $this->step : -$this->step;
