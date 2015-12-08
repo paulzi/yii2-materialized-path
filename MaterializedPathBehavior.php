@@ -535,6 +535,20 @@ class MaterializedPathBehavior extends Behavior
         $this->operation = null;
         $this->node      = null;
     }
+    
+    /**
+     * Reorders children with values  of sortAttribute begin from zero.
+     * @throws \Exception
+     */
+    public function reorderChildren()
+    {
+        \Yii::$app->getDb()->transaction(function () {
+            foreach ($this->getChildren()->each() as $i => $child) {
+                $child->{$this->sortAttribute} = ($i - 1) * $this->step;
+                $child->save();
+            }
+        });
+    }
 
     /**
      * @param bool $forInsertNear
