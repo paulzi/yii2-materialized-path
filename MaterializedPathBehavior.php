@@ -67,6 +67,11 @@ class MaterializedPathBehavior extends Behavior
     public $step = 100;
 
     /**
+     * @var int Value of $depthAttribute for root node.
+     */
+    public $rootDepthValue = 0;
+    
+    /**
      * @var int|null
      */
     protected $operation;
@@ -652,7 +657,7 @@ class MaterializedPathBehavior extends Behavior
             }
         }
 
-        $this->owner->setAttribute($this->depthAttribute, 0);
+        $this->owner->setAttribute($this->depthAttribute, $this->rootDepthValue);
     }
 
     /**
