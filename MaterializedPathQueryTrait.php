@@ -20,6 +20,6 @@ trait MaterializedPathQueryTrait
         /** @var \yii\db\ActiveQuery $this */
         $class = $this->modelClass;
         $model = new $class;
-        return $this->andWhere([$model->depthAttribute => 0]);
+        return $this->andWhere([$model->depthAttribute => $model->rootDepthValue]);
     }
 }
