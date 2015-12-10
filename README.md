@@ -143,8 +143,8 @@ To get all the descendants of a node at one query:
 
 ```php
 $node11 = Sample::findOne(['name' => 'node 1.1']);
-$tree = $node11->getTree(); // self node will be at the root of tree
-$tree = $node11->getTree(2); // get 2 levels of descendant and self node at the root of tree
+$tree = $node11->populateTree(); // self node will be at the root of tree
+$tree = $node11->populateTree(2); // get 2 levels of descendant and self node at the root of tree
 ```
 
 To get the children of a node:
