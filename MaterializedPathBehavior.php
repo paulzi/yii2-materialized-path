@@ -562,7 +562,7 @@ class MaterializedPathBehavior extends Behavior
      * @param int $depth = null
      * @return static
      */
-    public function getTree($depth = null)
+    public function populateTree($depth = null)
     {
         /** @var static[] $nodes */
         $nodes = $this
