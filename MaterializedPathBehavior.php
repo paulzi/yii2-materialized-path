@@ -542,7 +542,8 @@ class MaterializedPathBehavior extends Behavior
     }
     
     /**
-     * Reorders children with values  of sortAttribute begin from zero.
+     * Reorders children with values of $sortAttribute begin from zero.
+     * 
      * @throws \Exception
      */
     public function reorderChildren()
@@ -553,6 +554,56 @@ class MaterializedPathBehavior extends Behavior
                 $child->save();
             }
         });
+    }
+
+    /**
+     * Returns descendants nodes as tree with self node in the root.
+     *
+     * @param int $depth = null
+     * @return static
+     */
+    public function getTree($depth = null)
+    {
+        /** @var static[] $nodes */
+        $nodes = $this
+            ->getDescendants($depth)
+            ->indexBy($this->itemAttribute)
+            ->all();
+
+        $relates = [];
+        foreach ($nodes as $key => $node) {
+            $path = $node->getParentPath(false, true);
+            $parentKey = array_pop($path);
+            if (!isset($relates[$parentKey])) {
+                $relates[$parentKey] = [];
+            }
+            $relates[$parentKey][] = $node;
+        }
+
+        $nodes[$this->owner->{$this->itemAttribute}] = $this->owner;
+        foreach ($relates as $key => $children) {
+            $nodes[$key]->populateRelation('children', $children);
+        }
+
+        return $this->owner;
+    }
+
+    /**
+     * @param string|bool $path
+     * @param bool $asArray = false
+     * @return null|string|array
+     */
+    public function getParentPath($path = false, $asArray = false)
+    {
+        if ($path === false) {
+            $path = $this->owner->getAttribute($this->pathAttribute);
+        }
+        $path = explode($this->delimiter, $path);
+        array_pop($path);
+        if ($asArray) {
+            return $path;
+        }
+        return count($path) > 0 ? implode($this->delimiter, $path) : null;
     }
 
     /**
@@ -774,20 +825,6 @@ class MaterializedPathBehavior extends Behavior
         if (!empty($update)) {
             $this->owner->updateAll($update, $condition, $params);
         }
-    }
-
-    /**
-     * @param string|bool $path
-     * @return null|string
-     */
-    protected function getParentPath($path = false)
-    {
-        if ($path === false) {
-            $path = $this->owner->getAttribute($this->pathAttribute);
-        }
-        $path = explode($this->delimiter, $path);
-        array_pop($path);
-        return count($path) > 0 ? implode($this->delimiter, $path) : null;
     }
 
     /**
