@@ -304,6 +304,6 @@ $model->reorderChildren(false); // reorder from zero
 
 ## Updating from 1.x to 2.x
 
-1) Move attributes `sortAttribute`, `step` into `sortable` attribute.
-2) Change namespace from `paulzi\materializedpath` to `paulzi\materializedPath`.
-3) Include `paulzi\yii2-sortable` (`composer update`).
+1. Move attributes `sortAttribute`, `step` into `sortable` attribute.
+2. Change namespace from `paulzi\materializedpath` to `paulzi\materializedPath`.
+3. Include `paulzi\yii2-sortable` (`composer update`).
