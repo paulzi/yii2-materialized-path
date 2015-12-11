@@ -18,22 +18,64 @@ composer require paulzi/yii2-materialized-path
 or add
 
 ```bash
-"paulzi/yii2-materialized-path" : "^1.0"
+"paulzi/yii2-materialized-path" : "^2.0"
 ```
 
 to the `require` section of your `composer.json` file.
 
-## Migrations
+## Migrations example
 
-Sample migrations are in the folder `sample-migrations`:
+Single tree migration:
 
-- `m150722_150000_single_tree.php` - for single tree tables;
-- `m150722_150100_multiple_tree.php` - for multiple tree tables.
+```php
+class m150828_150000_single_tree extends Migration
+{
+    public function up()
+    {
+        $tableOptions = null;
+        if ($this->db->driverName === 'mysql') {
+            // http://stackoverflow.com/questions/766809/whats-the-difference-between-utf8-general-ci-and-utf8-unicode-ci
+            $tableOptions = 'CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE=InnoDB';
+        }
+        $this->createTable('{{%single_tree}}', [
+            'id'    => Schema::TYPE_PK,
+            'path'  => Schema::TYPE_STRING . ' NULL',
+            'depth' => Schema::TYPE_INTEGER . ' NOT NULL',
+            'sort'  => Schema::TYPE_INTEGER . ' NOT NULL',
+        ], $tableOptions);
+        $this->createIndex('path', '{{%single_tree}}', ['path']);
+    }
+}
+```
+
+Multiple tree migration:
+
+```php
+class m150828_150100_multiple_tree extends Migration
+{
+    public function up()
+    {
+        $tableOptions = null;
+        if ($this->db->driverName === 'mysql') {
+            // http://stackoverflow.com/questions/766809/whats-the-difference-between-utf8-general-ci-and-utf8-unicode-ci
+            $tableOptions = 'CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE=InnoDB';
+        }
+        $this->createTable('{{%multiple_tree}}', [
+            'id'    => Schema::TYPE_PK,
+            'tree'  => Schema::TYPE_INTEGER . ' NULL',
+            'path'  => Schema::TYPE_STRING . ' NULL',
+            'depth' => Schema::TYPE_INTEGER . ' NOT NULL',
+            'sort'  => Schema::TYPE_INTEGER . ' NOT NULL',
+        ], $tableOptions);
+        $this->createIndex('path', '{{%multiple_tree}}', ['tree', 'path']);
+    }
+}
+```
 
 ## Configuring
 
 ```php
-use paulzi\materializedpath\MaterializedPathBehavior;
+use paulzi\materializedPath\MaterializedPathBehavior;
 
 class Sample extends \yii\db\ActiveRecord
 {
@@ -70,7 +112,7 @@ class Sample extends \yii\db\ActiveRecord
 Query class:
 
 ```php
-use paulzi\materializedpath\MaterializedPathQueryTrait;
+use paulzi\materializedPath\MaterializedPathQueryTrait;
 
 class SampleQuery extends \yii\db\ActiveQuery
 {
@@ -78,15 +120,18 @@ class SampleQuery extends \yii\db\ActiveQuery
 }
 ```
 
+## Sortable Behavior
+
+This behavior attach SortableBehavior. You can use its methods (for example, reorder()).
+
 ## Options
 
 - `$pathAttribute = 'path'` - setup path attribute in table schema.
 - `$depthAttribute = 'depth'` - setup depth attribute in table schema.
-- `$sortAttribute = 'sort'` - setup sort attribute in table schema.
 - `$itemAttribute = null` - setup item attribute in table schema for get path path, if the value is not set - using the primary key.
 - `$treeAttribute = null` - setup tree attribute for multiple tree, when item attribute is not primary key.
+- `$sortable = []` - SortableBehavior settings - see [paulzi/yii2-sortable](https://github.com/paulzi/yii2-sortable).
 - `$delimiter = '/'` - delimiter of path items.
-- `$step = 100` - gap size between elements.
 - `$rootDepthValue = 0` - setup value of `$depthAttribute` for root nodes.
 
 ## Usage
@@ -139,12 +184,12 @@ $descendants = $node11->getDescendants()->all(); // via query
 $descendants = $node11->getDescendants(2, true)->all(); // get 2 levels of descendants and self node
 ```
 
-To get all the descendants of a node at one query:
+To populate `children` relations for self and descendants of a node:
 
 ```php
 $node11 = Sample::findOne(['name' => 'node 1.1']);
-$tree = $node11->populateTree(); // self node will be at the root of tree
-$tree = $node11->populateTree(2); // get 2 levels of descendant and self node at the root of tree
+$tree = $node11->populateTree(); // populate all levels
+$tree = $node11->populateTree(2); // populate 2 levels of descendants
 ```
 
 To get the children of a node:
@@ -248,9 +293,17 @@ $node11->delete(); // delete node, children come up to the parent
 $node11->deleteWithChildren(); // delete node and all descendants 
 ```
 
-To normalize values of `$sortAttribute` for node's children:
+Reorder children:
 
 ```php
-$node11 = Sample::findOne(['name' => 'node 1.1']);
-$node11->reorderChildren(); // children's $sortAttribute will be started from `0`
+$model = Sample::findOne(1);
+$model->reorderChildren(true); // reorder with center zero
+$model = Sample::findOne(2);
+$model->reorderChildren(false); // reorder from zero
 ```
+
+## Updating from 1.x to 2.x
+
+1) Move attributes `sortAttribute`, `step` into `sortable` attribute.
+2) Change namespace from `paulzi\materializedpath` to `paulzi\materializedPath`.
+3) Include `paulzi\yii2-sortable` (`composer update`).

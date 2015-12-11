@@ -5,11 +5,11 @@
  * @license MIT (https://github.com/paulzi/yii2-materialized-path/blob/master/LICENSE)
  */
 
-namespace paulzi\materializedpath\tests;
+namespace paulzi\materializedPath\tests;
 
-use paulzi\materializedpath\tests\models\Node;
-use paulzi\materializedpath\tests\models\AttributeModeNode;
-use paulzi\materializedpath\tests\models\MultipleTreeNode;
+use paulzi\materializedPath\tests\models\Node;
+use paulzi\materializedPath\tests\models\AttributeModeNode;
+use paulzi\materializedPath\tests\models\MultipleTreeNode;
 use Yii;
 
 /**

@@ -5,15 +5,15 @@
  * @license MIT (https://github.com/paulzi/yii2-materialized-path/blob/master/LICENSE)
  */
 
-namespace paulzi\materializedpath;
+namespace paulzi\materializedPath;
 
+use paulzi\sortable\SortableBehavior;
 use Yii;
 use yii\base\Behavior;
 use yii\base\Exception;
 use yii\base\NotSupportedException;
 use yii\db\ActiveRecord;
 use yii\db\Expression;
-use yii\db\Query;
 
 /**
  * Materialized Path Behavior for Yii2
@@ -44,11 +44,6 @@ class MaterializedPathBehavior extends Behavior
     /**
      * @var string
      */
-    public $sortAttribute = 'sort';
-
-    /**
-     * @var string
-     */
     public $itemAttribute;
 
     /**
@@ -57,14 +52,14 @@ class MaterializedPathBehavior extends Behavior
     public $treeAttribute;
 
     /**
+     * @var array|false SortableBehavior config
+     */
+    public $sortable = [];
+
+    /**
      * @var string
      */
     public $delimiter = '/';
-
-    /**
-     * @var int
-     */
-    public $step = 100;
 
     /**
      * @var int Value of $depthAttribute for root node.
@@ -80,6 +75,11 @@ class MaterializedPathBehavior extends Behavior
      * @var ActiveRecord|self|null
      */
     protected $node;
+
+    /**
+     * @var SortableBehavior
+     */
+    protected $behavior;
 
     /**
      * @var bool
@@ -108,6 +108,7 @@ class MaterializedPathBehavior extends Behavior
      */
     public function attach($owner)
     {
+        parent::attach($owner);
         if ($this->itemAttribute === null) {
             $primaryKey = $owner->primaryKey();
             if (!isset($primaryKey[0])) {
@@ -116,7 +117,18 @@ class MaterializedPathBehavior extends Behavior
             $this->itemAttribute = $primaryKey[0];
             $this->primaryKeyMode = true;
         }
-        parent::attach($owner);
+        if ($this->sortable !== false) {
+            $this->behavior = Yii::createObject(array_merge(
+                [
+                    'class' => SortableBehavior::className(),
+                    'query' => function () {
+                        return $this->getSortableQuery();
+                    },
+                ],
+                $this->sortable
+            ));
+            $owner->attachBehavior('materialized-path-sortable', $this->behavior);
+        }
     }
 
     /**
@@ -196,10 +208,8 @@ class MaterializedPathBehavior extends Behavior
     {
         $tableName = $this->owner->tableName();
         $path = $this->owner->getAttribute($this->pathAttribute);
-        $like = strtr($path . $this->delimiter, ['%' => '\%', '_' => '\_', '\\' => '\\\\']);
-
         $query = $this->owner->find()
-            ->andWhere(['like', "{$tableName}.[[{$this->pathAttribute}]]", $like . '%', false]);
+            ->andWhere(['like', "{$tableName}.[[{$this->pathAttribute}]]", $this->getLike($path), false]);
 
         if ($andSelf) {
             $query->orWhere(["{$tableName}.[[{$this->pathAttribute}]]" => $path]);
@@ -209,13 +219,16 @@ class MaterializedPathBehavior extends Behavior
             $query->andWhere(['<=', "{$tableName}.[[{$this->depthAttribute}]]", $this->owner->getAttribute($this->depthAttribute) + $depth]);
         }
 
+        $orderBy = [];
+        $orderBy["{$tableName}.[[{$this->depthAttribute}]]"] = SORT_ASC;
+        if ($this->sortable !== false) {
+            $orderBy["{$tableName}.[[{$this->behavior->sortAttribute}]]"] = SORT_ASC;
+        }
+        $orderBy["{$tableName}.[[{$this->itemAttribute}]]"]  = SORT_ASC;
+
         $query
             ->andWhere($this->treeCondition())
-            ->addOrderBy([
-                "{$tableName}.[[{$this->depthAttribute}]]" => SORT_ASC,
-                "{$tableName}.[[{$this->sortAttribute}]]"  => SORT_ASC,
-                "{$tableName}.[[{$this->itemAttribute}]]"  => SORT_ASC,
-            ]);
+            ->addOrderBy($orderBy);
         $query->multiple = true;
 
         return $query;
@@ -254,17 +267,20 @@ class MaterializedPathBehavior extends Behavior
 
     /**
      * @return \yii\db\ActiveQuery
+     * @throws NotSupportedException
      */
     public function getPrev()
     {
+        if ($this->sortable === false) {
+            throw new NotSupportedException('prev() not allow if not set sortable');
+        }
         $tableName = $this->owner->tableName();
-        $like = strtr($this->getParentPath() . $this->delimiter, ['%' => '\%', '_' => '\_', '\\' => '\\\\']);
         $query = $this->owner->find()
-            ->andWhere(['like', "{$tableName}.[[{$this->pathAttribute}]]", $like . '%', false])
+            ->andWhere(['like', "{$tableName}.[[{$this->pathAttribute}]]", $this->getLike($this->getParentPath()), false])
             ->andWhere(["{$tableName}.[[{$this->depthAttribute}]]" => $this->owner->getAttribute($this->depthAttribute)])
-            ->andWhere(['<', "{$tableName}.[[{$this->sortAttribute}]]", $this->owner->getAttribute($this->sortAttribute)])
+            ->andWhere(['<', "{$tableName}.[[{$this->behavior->sortAttribute}]]", $this->owner->getSortablePosition()])
             ->andWhere($this->treeCondition())
-            ->orderBy(["{$tableName}.[[{$this->sortAttribute}]]" => SORT_DESC])
+            ->orderBy(["{$tableName}.[[{$this->behavior->sortAttribute}]]" => SORT_DESC])
             ->limit(1);
         $query->multiple = false;
         return $query;
@@ -272,20 +288,70 @@ class MaterializedPathBehavior extends Behavior
 
     /**
      * @return \yii\db\ActiveQuery
+     * @throws NotSupportedException
      */
     public function getNext()
     {
+        if ($this->sortable === false) {
+            throw new NotSupportedException('prev() not allow if not set sortable');
+        }
         $tableName = $this->owner->tableName();
-        $like = strtr($this->getParentPath() . $this->delimiter, ['%' => '\%', '_' => '\_', '\\' => '\\\\']);
         $query = $this->owner->find()
-            ->andWhere(['like', "{$tableName}.[[{$this->pathAttribute}]]", $like . '%', false])
+            ->andWhere(['like', "{$tableName}.[[{$this->pathAttribute}]]", $this->getLike($this->getParentPath()), false])
             ->andWhere(["{$tableName}.[[{$this->depthAttribute}]]" => $this->owner->getAttribute($this->depthAttribute)])
-            ->andWhere(['>', "{$tableName}.[[{$this->sortAttribute}]]", $this->owner->getAttribute($this->sortAttribute)])
+            ->andWhere(['>', "{$tableName}.[[{$this->behavior->sortAttribute}]]", $this->owner->getSortablePosition()])
             ->andWhere($this->treeCondition())
-            ->orderBy(["{$tableName}.[[{$this->sortAttribute}]]" => SORT_ASC])
+            ->orderBy(["{$tableName}.[[{$this->behavior->sortAttribute}]]" => SORT_ASC])
             ->limit(1);
         $query->multiple = false;
         return $query;
+    }
+
+    /**
+     * @param bool $asArray = false
+     * @return null|string|array
+     */
+    public function getParentPath($asArray = false)
+    {
+        return static::getParentPathInternal($this->owner->getAttribute($this->pathAttribute), $this->delimiter, $asArray);
+    }
+
+    /**
+     * Populate children relations for self and all descendants
+     *
+     * @param int $depth = null
+     * @return static
+     */
+    public function populateTree($depth = null)
+    {
+        /** @var ActiveRecord[]|static[] $nodes */
+        if ($depth === null) {
+            $nodes = $this->owner->descendants;
+        } else {
+            $nodes = $this->getDescendants($depth)->all();
+        }
+
+        $relates = [];
+        foreach ($nodes as $node) {
+            $path = $node->getParentPath(true);
+            $key = array_pop($path);
+            if (!isset($relates[$key])) {
+                $relates[$key] = [];
+            }
+            $relates[$key][] = $node;
+        }
+
+        $nodes[$this->owner->getAttribute($this->itemAttribute)] = $this->owner;
+        foreach ($nodes as $node) {
+            $key = $node->getAttribute($this->itemAttribute);
+            if (isset($relates[$key])) {
+                $node->populateRelation('children', $relates[$key]);
+            } elseif ($depth === null) {
+                $node->populateRelation('children', []);
+            }
+        }
+
+        return $this->owner;
     }
 
     /**
@@ -402,6 +468,21 @@ class MaterializedPathBehavior extends Behavior
     }
 
     /**
+     * @param bool $middle
+     * @return int
+     */
+    public function reorderChildren($middle = true)
+    {
+        /** @var ActiveRecord|SortableBehavior $item */
+        $item = $this->owner->children[0];
+        if ($item) {
+            return $item->reorder($middle);
+        } else {
+            return 0;
+        }
+    }
+
+    /**
      * @throws Exception
      * @throws NotSupportedException
      */
@@ -440,7 +521,7 @@ class MaterializedPathBehavior extends Behavior
                 }
 
                 $item = $this->owner->getAttribute($this->itemAttribute);
-                $path = $this->getParentPath($this->owner->getAttribute($this->pathAttribute));
+                $path = $this->getParentPath();
                 $this->owner->setAttribute($this->pathAttribute, $path . $this->delimiter . $item);
         }
     }
@@ -470,9 +551,10 @@ class MaterializedPathBehavior extends Behavior
             if ($this->operation === self::OPERATION_MAKE_ROOT) {
                 $path = $id;
             } else {
-                $path = $this->node->getAttribute($this->pathAttribute);
                 if ($this->operation === self::OPERATION_INSERT_BEFORE || $this->operation === self::OPERATION_INSERT_AFTER) {
-                    $path = $this->getParentPath($path);
+                    $path = $this->node->getParentPath();
+                } else {
+                    $path = $this->node->getAttribute($this->pathAttribute);
                 }
                 $path = $path . $this->delimiter . $id;
             }
@@ -541,71 +623,8 @@ class MaterializedPathBehavior extends Behavior
         $this->node      = null;
     }
     
-    /**
-     * Reorders children with values of $sortAttribute begin from zero.
-     * 
-     * @throws \Exception
-     */
-    public function reorderChildren()
-    {
-        \Yii::$app->getDb()->transaction(function () {
-            foreach ($this->getChildren()->each() as $i => $child) {
-                $child->{$this->sortAttribute} = ($i - 1) * $this->step;
-                $child->save();
-            }
-        });
-    }
-
-    /**
-     * Returns descendants nodes as tree with self node in the root.
-     *
-     * @param int $depth = null
-     * @return static
-     */
-    public function populateTree($depth = null)
-    {
-        /** @var static[] $nodes */
-        $nodes = $this
-            ->getDescendants($depth)
-            ->indexBy($this->itemAttribute)
-            ->all();
-
-        $relates = [];
-        foreach ($nodes as $key => $node) {
-            $path = $node->getParentPath(false, true);
-            $parentKey = array_pop($path);
-            if (!isset($relates[$parentKey])) {
-                $relates[$parentKey] = [];
-            }
-            $relates[$parentKey][] = $node;
-        }
-
-        $nodes[$this->owner->{$this->itemAttribute}] = $this->owner;
-        foreach ($relates as $key => $children) {
-            $nodes[$key]->populateRelation('children', $children);
-        }
-
-        return $this->owner;
-    }
-
-    /**
-     * @param string|bool $path
-     * @param bool $asArray = false
-     * @return null|string|array
-     */
-    public function getParentPath($path = false, $asArray = false)
-    {
-        if ($path === false) {
-            $path = $this->owner->getAttribute($this->pathAttribute);
-        }
-        $path = explode($this->delimiter, $path);
-        array_pop($path);
-        if ($asArray) {
-            return $path;
-        }
-        return count($path) > 0 ? implode($this->delimiter, $path) : null;
-    }
-
+    
+    
     /**
      * @param bool $forInsertNear
      * @throws Exception
@@ -629,63 +648,6 @@ class MaterializedPathBehavior extends Behavior
     }
 
     /**
-     * @param int $to
-     * @param bool $forward
-     */
-    protected function moveTo($to, $forward)
-    {
-        $this->owner->setAttribute($this->sortAttribute, $to + ($forward ? 1 : -1));
-
-        $tableName = $this->owner->tableName();
-        $path = $this->getParentPath($this->node->getAttribute($this->pathAttribute));
-        $like = strtr($path . $this->delimiter, ['%' => '\%', '_' => '\_', '\\' => '\\\\']);
-
-        $joinCondition = [
-            'and',
-            ['like', "n.[[{$this->pathAttribute}]]", $like . '%', false],
-            [
-                "n.[[{$this->depthAttribute}]]" => $this->node->getAttribute($this->depthAttribute),
-                "n.[[{$this->sortAttribute}]]"  => new Expression("{$tableName}.[[{$this->sortAttribute}]] " . ($forward ? '+' : '-') . " 1"),
-            ],
-        ];
-        if (!$this->owner->getIsNewRecord()) {
-            $joinCondition[] = ['<>', "n.[[{$this->pathAttribute}]]", $this->owner->getAttribute($this->pathAttribute)];
-        }
-        if ($this->treeAttribute !== null) {
-            $joinCondition[] = ["n.[[{$this->treeAttribute}]]" => new Expression("{$tableName}.[[{$this->treeAttribute}]]")];
-        }
-
-        $unallocated = (new Query())
-            ->select("{$tableName}.[[{$this->sortAttribute}]]")
-            ->from("{$tableName}")
-            ->leftJoin("{$tableName} n", $joinCondition)
-            ->where([
-                'and',
-                ['like', "{$tableName}.[[{$this->pathAttribute}]]", $like . '%', false],
-                $this->treeCondition(),
-                [$forward ? '>=' : '<=', "{$tableName}.[[{$this->sortAttribute}]]", $to],
-                [
-                    "{$tableName}.[[{$this->depthAttribute}]]" => $this->node->getAttribute($this->depthAttribute),
-                    "n.[[{$this->sortAttribute}]]"             => null,
-                ],
-            ])
-            ->orderBy(["{$tableName}.[[{$this->sortAttribute}]]" => $forward ? SORT_ASC : SORT_DESC])
-            ->limit(1)
-            ->scalar($this->owner->getDb());
-
-        $this->owner->updateAll(
-            [$this->sortAttribute => new Expression("[[{$this->sortAttribute}]] " . ($forward ? '+' : '-') . " 1")],
-            [
-                'and',
-                ['like', "[[{$this->pathAttribute}]]", $like . '%', false],
-                $this->treeCondition(),
-                ["[[{$this->depthAttribute}]]" => $this->node->getAttribute($this->depthAttribute)],
-                ['between', $this->sortAttribute, $forward ? $to + 1 : $unallocated, $forward ? $unallocated : $to - 1],
-            ]
-        );
-    }
-
-    /**
      * Make root operation internal handler
      */
     protected function makeRootInternal()
@@ -696,8 +658,8 @@ class MaterializedPathBehavior extends Behavior
             $this->owner->setAttribute($this->pathAttribute, $item);
         }
 
-        if ($this->sortAttribute !== null) {
-            $this->owner->setAttribute($this->sortAttribute, 0);
+        if ($this->sortable !== false) {
+            $this->owner->setAttribute($this->behavior->sortAttribute, 0);
         }
 
         if ($this->treeAttribute !== null) {
@@ -732,19 +694,12 @@ class MaterializedPathBehavior extends Behavior
             $this->owner->setAttribute($this->treeAttribute, $this->node->getAttribute($this->treeAttribute));
         }
 
-        if ($this->sortAttribute !== null) {
-            $to = $this->node->getChildren()->orderBy(null);
-            $to = $append ? $to->max($this->sortAttribute) : $to->min($this->sortAttribute);
-            if (
-                !$this->owner->getIsNewRecord() && (int)$to === $this->owner->getAttribute($this->sortAttribute)
-                && !$this->owner->getDirtyAttributes([$this->pathAttribute])
-            ) {
-            } elseif ($to !== null) {
-                $to += $append ? $this->step : -$this->step;
+        if ($this->sortable !== false) {
+            if ($append) {
+                $this->owner->moveLast();
             } else {
-                $to = 0;
+                $this->owner->moveFirst();
             }
-            $this->owner->setAttribute($this->sortAttribute, $to);
         }
     }
 
@@ -759,7 +714,7 @@ class MaterializedPathBehavior extends Behavior
         $item = $this->owner->getAttribute($this->itemAttribute);
 
         if ($item !== null) {
-            $path = $this->getParentPath($this->node->getAttribute($this->pathAttribute));
+            $path = $this->node->getParentPath();
             $this->owner->setAttribute($this->pathAttribute, $path . $this->delimiter . $item);
         }
 
@@ -769,8 +724,12 @@ class MaterializedPathBehavior extends Behavior
             $this->owner->setAttribute($this->treeAttribute, $this->node->getAttribute($this->treeAttribute));
         }
 
-        if ($this->sortAttribute !== null) {
-            $this->moveTo($this->node->getAttribute($this->sortAttribute), $forward);
+        if ($this->sortable !== false) {
+            if ($forward) {
+                $this->owner->moveAfter($this->node);
+            } else {
+                $this->owner->moveBefore($this->node);
+            }
         }
     }
 
@@ -795,11 +754,10 @@ class MaterializedPathBehavior extends Behavior
     protected function moveNode($changedAttributes)
     {
         $path = isset($changedAttributes[$this->pathAttribute]) ? $changedAttributes[$this->pathAttribute] : $this->owner->getAttribute($this->pathAttribute);
-        $like = strtr($path . $this->delimiter, ['%' => '\%', '_' => '\_', '\\' => '\\\\']);
         $update = [];
         $condition = [
             'and',
-            ['like', "[[{$this->pathAttribute}]]", $like . '%', false],
+            ['like', "[[{$this->pathAttribute}]]", $this->getLike($path), false],
         ];
         if ($this->treeAttribute !== null) {
             $tree = isset($changedAttributes[$this->treeAttribute]) ? $changedAttributes[$this->treeAttribute] : $this->owner->getAttribute($this->treeAttribute);
@@ -828,6 +786,22 @@ class MaterializedPathBehavior extends Behavior
     }
 
     /**
+     * @param string $path
+     * @param string $delimiter
+     * @param bool $asArray = false
+     * @return null|string|array
+     */
+    protected static function getParentPathInternal($path, $delimiter, $asArray = false)
+    {
+        $path = explode($delimiter, $path);
+        array_pop($path);
+        if ($asArray) {
+            return $path;
+        }
+        return count($path) > 0 ? implode($delimiter, $path) : null;
+    }
+
+    /**
      * @return array
      */
     protected function treeCondition()
@@ -838,6 +812,45 @@ class MaterializedPathBehavior extends Behavior
         } else {
             return ["{$tableName}.[[{$this->treeAttribute}]]" => $this->owner->getAttribute($this->treeAttribute)];
         }
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    protected function getSortableQuery()
+    {
+        switch ($this->operation) {
+            case self::OPERATION_PREPEND_TO:
+            case self::OPERATION_APPEND_TO:
+                $path  = $this->node->getAttribute($this->pathAttribute);
+                $depth = $this->node->getAttribute($this->depthAttribute) + 1;
+                break;
+
+            case self::OPERATION_INSERT_BEFORE:
+            case self::OPERATION_INSERT_AFTER:
+                $path  = $this->node->getParentPath();
+                $depth = $this->node->getAttribute($this->depthAttribute);
+                break;
+
+            default:
+                $path  = $this->getParentPath();
+                $depth = $this->owner->getAttribute($this->depthAttribute);
+        }
+        $tableName = $this->owner->tableName();
+
+        return $this->owner->find()
+            ->andWhere($this->treeCondition())
+            ->andWhere($path !== null ? ['like', "{$tableName}.[[{$this->pathAttribute}]]", $this->getLike($path), false] : '1=0')
+            ->andWhere(["{$tableName}.[[{$this->depthAttribute}]]" => $depth]);
+    }
+
+    /**
+     * @param string $path
+     * @return string
+     */
+    protected function getLike($path)
+    {
+        return strtr($path . $this->delimiter, ['%' => '\%', '_' => '\_', '\\' => '\\\\']) . '%';
     }
 
     /**

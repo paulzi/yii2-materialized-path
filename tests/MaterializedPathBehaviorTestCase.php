@@ -5,12 +5,12 @@
  * @license MIT (https://github.com/paulzi/yii2-materialized-path/blob/master/LICENSE)
  */
 
-namespace paulzi\materializedpath\tests;
+namespace paulzi\materializedPath\tests;
 
-use paulzi\materializedpath\tests\migrations\TestMigration;
-use paulzi\materializedpath\tests\models\AttributeModeNode;
-use paulzi\materializedpath\tests\models\MultipleTreeNode;
-use paulzi\materializedpath\tests\models\Node;
+use paulzi\materializedPath\tests\migrations\TestMigration;
+use paulzi\materializedPath\tests\models\AttributeModeNode;
+use paulzi\materializedPath\tests\models\MultipleTreeNode;
+use paulzi\materializedPath\tests\models\Node;
 use Yii;
 
 /**
@@ -120,6 +120,33 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $this->assertEquals($data, Node::findOne(4)->getNext()->one());
         $this->assertEquals($data, AttributeModeNode::findOne(4)->getNext()->one());
         $this->assertEquals($data, MultipleTreeNode::findOne(4)->getNext()->one());
+    }
+
+    public function testGetParentPath()
+    {
+        $this->assertEquals('1/2', Node::findOne(7)->getParentPath());
+        $this->assertEquals(null, AttributeModeNode::findOne(1)->getParentPath());
+        $this->assertEquals(['r', 'n1'], MultipleTreeNode::findOne(7)->getParentPath(true));
+        $this->assertEquals([], Node::findOne(14)->getParentPath(true));
+    }
+
+    public function testPopulateTree()
+    {
+        $node = Node::findOne(4);
+        $node->populateTree();
+        $this->assertEquals(true, $node->isRelationPopulated('children'));
+        $this->assertEquals(true, $node->children[0]->isRelationPopulated('children'));
+        $this->assertEquals(11, $node->children[0]->id);
+
+        $node = AttributeModeNode::findOne(4);
+        $node->populateTree(1);
+        $this->assertEquals(true, $node->isRelationPopulated('children'));
+        $this->assertEquals(false, $node->children[0]->isRelationPopulated('children'));
+        $this->assertEquals(11, $node->children[0]->id);
+
+        $node = MultipleTreeNode::findOne(19);
+        $node->populateTree();
+        $this->assertEquals(true, $node->isRelationPopulated('children'));
     }
 
     public function testIsRoot()
@@ -837,6 +864,17 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
     {
         $node = new Node(['slug' => 'new']);
         $node->deleteWithChildren();
+    }
+
+    public function testReorderChildren()
+    {
+        $this->assertEquals(true, Node::findOne(4)->reorderChildren(true) > 0);
+
+        $this->assertEquals(true, MultipleTreeNode::findOne(4)->reorderChildren(false) > 0);
+
+        $dataSet = $this->getConnection()->createDataSet(['tree', 'attribute_mode_tree', 'multiple_tree']);
+        $expectedDataSet = new ArrayDataSet(require(__DIR__ . '/data/test-reorder-children.php'));
+        $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
     /**

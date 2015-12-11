@@ -5,9 +5,9 @@
  * @license MIT (https://github.com/paulzi/yii2-materialized-path/blob/master/LICENSE)
  */
 
-namespace paulzi\materializedpath\tests\mysql;
+namespace paulzi\materializedPath\tests\mysql;
 
-use paulzi\materializedpath\tests\MaterializedPathQueryTraitTestCase;
+use paulzi\materializedPath\tests\MaterializedPathQueryTraitTestCase;
 
 /**
  * @group mysql

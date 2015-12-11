@@ -5,7 +5,7 @@
  * @license MIT (https://github.com/paulzi/yii2-materialized-path/blob/master/LICENSE)
  */
 
-namespace paulzi\materializedpath\tests\migrations;
+namespace paulzi\materializedPath\tests\migrations;
 
 use yii\db\Schema;
 use yii\db\Migration;

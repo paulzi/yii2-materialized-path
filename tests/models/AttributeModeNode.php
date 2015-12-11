@@ -5,9 +5,9 @@
  * @license MIT (https://github.com/paulzi/yii2-materialized-path/blob/master/LICENSE)
  */
 
-namespace paulzi\materializedpath\tests\models;
+namespace paulzi\materializedPath\tests\models;
 
-use paulzi\materializedpath\MaterializedPathBehavior;
+use paulzi\materializedPath\MaterializedPathBehavior;
 
 /**
  * @author PaulZi <pavel.zimakoff@gmail.com>
