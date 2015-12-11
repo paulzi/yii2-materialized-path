@@ -87,6 +87,7 @@ class SampleQuery extends \yii\db\ActiveQuery
 - `$treeAttribute = null` - setup tree attribute for multiple tree, when item attribute is not primary key.
 - `$delimiter = '/'` - delimiter of path items.
 - `$step = 100` - gap size between elements.
+- `$rootDepthValue = 0` - setup value of `$depthAttribute` for root nodes.
 
 ## Usage
 
@@ -136,6 +137,14 @@ $node11 = Sample::findOne(['name' => 'node 1.1']);
 $descendants = $node11->descendants; // via relation
 $descendants = $node11->getDescendants()->all(); // via query
 $descendants = $node11->getDescendants(2, true)->all(); // get 2 levels of descendants and self node
+```
+
+To get all the descendants of a node at one query:
+
+```php
+$node11 = Sample::findOne(['name' => 'node 1.1']);
+$tree = $node11->populateTree(); // self node will be at the root of tree
+$tree = $node11->populateTree(2); // get 2 levels of descendant and self node at the root of tree
 ```
 
 To get the children of a node:
@@ -237,4 +246,11 @@ To delete a node with descendants:
 $node11 = Sample::findOne(['name' => 'node 1.1']);
 $node11->delete(); // delete node, children come up to the parent
 $node11->deleteWithChildren(); // delete node and all descendants 
+```
+
+To normalize values of `$sortAttribute` for node's children:
+
+```php
+$node11 = Sample::findOne(['name' => 'node 1.1']);
+$node11->reorderChildren(); // children's $sortAttribute will be started from `0`
 ```
