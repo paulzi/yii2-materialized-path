@@ -308,6 +308,40 @@ class MaterializedPathBehavior extends Behavior
     }
 
     /**
+     * Returns all sibilings of node.
+     * 
+     * @param bool $andSelf = false Include self node into result.
+     * @return \yii\db\ActiveQuery
+     */
+    public function getSiblings($andSelf = false)
+    {
+        $tableName = $this->owner->tableName();
+        $path = $this->getParentPath();
+        $like = strtr($path . $this->delimiter, ['%' => '\%', '_' => '\_', '\\' => '\\\\']);
+
+        $query = $this->owner->find()
+            ->andWhere(['like', "{$tableName}.[[{$this->pathAttribute}]]", $like . '%', false])
+            ->andWhere(['<=', "{$tableName}.[[{$this->depthAttribute}]]", $this->owner->{$this->depthAttribute}]);
+
+        if (!$andSelf) {
+            $query->andWhere(["!=", "{$tableName}.[[{$this->itemAttribute}]]", $this->owner->{$this->itemAttribute}]);
+        }
+
+        $orderBy = [];
+        $orderBy["{$tableName}.[[{$this->depthAttribute}]]"] = SORT_ASC;
+        if ($this->sortable !== false) {
+            $orderBy["{$tableName}.[[{$this->behavior->sortAttribute}]]"] = SORT_ASC;
+        }
+        $orderBy["{$tableName}.[[{$this->itemAttribute}]]"] = SORT_ASC;
+
+        $query
+            ->andWhere($this->treeCondition())
+            ->addOrderBy($orderBy);
+        $query->multiple = true;
+        return $query;
+    }
+
+    /**
      * @param bool $asArray = false
      * @return null|string|array
      */
