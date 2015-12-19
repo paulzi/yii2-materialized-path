@@ -696,12 +696,8 @@ class MaterializedPathBehavior extends Behavior
             $this->owner->setAttribute($this->behavior->sortAttribute, 0);
         }
 
-        if ($this->treeAttribute !== null) {
-            if ($this->owner->getOldAttribute($this->treeAttribute) !== $this->owner->getAttribute($this->treeAttribute)) {
-                $this->owner->setAttribute($this->treeAttribute, $this->owner->getAttribute($this->treeAttribute));
-            } elseif (!$this->owner->getIsNewRecord()) {
-                $this->owner->setAttribute($this->treeAttribute, $this->owner->getPrimaryKey());
-            }
+        if ($this->treeAttribute !== null && !$this->owner->getDirtyAttributes([$this->treeAttribute]) && !$this->owner->getIsNewRecord()) {
+            $this->owner->setAttribute($this->treeAttribute, $this->owner->getPrimaryKey());
         }
 
         $this->owner->setAttribute($this->depthAttribute, $this->rootDepthValue);
