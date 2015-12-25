@@ -140,7 +140,7 @@ This behavior attach SortableBehavior. You can use its methods (for example, reo
 
 **Getting the root nodes**
 
-If you connect `NestedSetsQueryTrait`, you can get all the root nodes:
+If you connect `MaterializedPathQueryTrait`, you can get all the root nodes:
 
 ```php
 $roots = Sample::find()->roots()->all();
