@@ -402,6 +402,9 @@ class MaterializedPathBehavior extends Behavior
      */
     public function isChildOf($node)
     {
+        if ($node->getIsNewRecord()) {
+            return false;
+        }
         $nodePath  = $node->getAttribute($this->pathAttribute) . $this->delimiter;
         $result = substr($this->owner->getAttribute($this->pathAttribute), 0, strlen($nodePath)) === $nodePath;
 
