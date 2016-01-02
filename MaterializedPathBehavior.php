@@ -799,7 +799,12 @@ class MaterializedPathBehavior extends Behavior
         $params = [];
 
         if (isset($changedAttributes[$this->pathAttribute])) {
-            $update['path']     = new Expression($this->concatExpression([':pathNew', $this->substringExpression('[[path]]', 'LENGTH(:pathOld) + 1', 'LENGTH([[path]]) - LENGTH(:pathOld)')]));
+            $substringExpr = $this->substringExpression(
+                "[[{$this->pathAttribute}]]",
+                'LENGTH(:pathOld) + 1',
+                "LENGTH([[{$this->pathAttribute}]]) - LENGTH(:pathOld)"
+            );
+            $update[$this->pathAttribute] = new Expression($this->concatExpression([':pathNew', $substringExpr]));
             $params[':pathOld'] = $path;
             $params[':pathNew'] = $this->owner->getAttribute($this->pathAttribute);
         }
