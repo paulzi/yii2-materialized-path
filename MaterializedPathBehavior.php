@@ -375,7 +375,7 @@ class MaterializedPathBehavior extends Behavior
             $relates[$key][] = $node;
         }
 
-        $nodes[$this->owner->getAttribute($this->itemAttribute)] = $this->owner;
+        $nodes[] = $this->owner;
         foreach ($nodes as $node) {
             $key = $node->getAttribute($this->itemAttribute);
             if (isset($relates[$key])) {
