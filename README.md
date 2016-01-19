@@ -42,6 +42,7 @@ class m150828_150000_single_tree extends Migration
             'path'  => Schema::TYPE_STRING . ' NULL',
             'depth' => Schema::TYPE_INTEGER . ' NOT NULL',
             'sort'  => Schema::TYPE_INTEGER . ' NOT NULL',
+            'name'  => Schema::TYPE_STRING . ' NOT NULL', // example field
         ], $tableOptions);
         $this->createIndex('path', '{{%single_tree}}', ['path']);
     }
@@ -66,6 +67,7 @@ class m150828_150100_multiple_tree extends Migration
             'path'  => Schema::TYPE_STRING . ' NULL',
             'depth' => Schema::TYPE_INTEGER . ' NOT NULL',
             'sort'  => Schema::TYPE_INTEGER . ' NOT NULL',
+            'name'  => Schema::TYPE_STRING . ' NOT NULL', // example field
         ], $tableOptions);
         $this->createIndex('path', '{{%multiple_tree}}', ['tree', 'path']);
     }
