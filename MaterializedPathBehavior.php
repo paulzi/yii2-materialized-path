@@ -559,7 +559,7 @@ class MaterializedPathBehavior extends Behavior
 
                 $item = $this->owner->getAttribute($this->itemAttribute);
                 $path = $this->getParentPath();
-                $this->owner->setAttribute($this->pathAttribute, $path . $this->delimiter . $item);
+                $this->owner->setAttribute($this->pathAttribute, ($path !== null ? $path . $this->delimiter : null) . $item);
         }
     }
 
