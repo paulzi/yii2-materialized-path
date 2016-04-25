@@ -569,7 +569,7 @@ class MaterializedPathBehavior extends Behavior
     public function afterInsert()
     {
         if ($this->operation === self::OPERATION_MAKE_ROOT && $this->treeAttribute !== null && $this->owner->getAttribute($this->treeAttribute) === null) {
-            $id = reset($this->owner->getPrimaryKey(true));
+            $id = $this->getPrimaryKeyValue();
             $this->owner->setAttribute($this->treeAttribute, $id);
 
             $primaryKey = $this->owner->primaryKey();
@@ -584,7 +584,7 @@ class MaterializedPathBehavior extends Behavior
             if (!isset($primaryKey[0])) {
                 throw new Exception('"' . $this->owner->className() . '" must have a primary key.');
             }
-            $id = reset($this->owner->getPrimaryKey(true));
+            $id = $this->getPrimaryKeyValue();
             if ($this->operation === self::OPERATION_MAKE_ROOT) {
                 $path = $id;
             } else {
@@ -659,8 +659,16 @@ class MaterializedPathBehavior extends Behavior
         $this->operation = null;
         $this->node      = null;
     }
-    
-    
+
+
+    /**
+     * @return string
+     */
+    protected function getPrimaryKeyValue()
+    {
+        $result = $this->owner->getPrimaryKey(true);
+        return reset($result);
+    }
 
     /**
      * @param bool $forInsertNear
@@ -700,7 +708,7 @@ class MaterializedPathBehavior extends Behavior
         }
 
         if ($this->treeAttribute !== null && !$this->owner->getDirtyAttributes([$this->treeAttribute]) && !$this->owner->getIsNewRecord()) {
-            $this->owner->setAttribute($this->treeAttribute, reset($this->owner->getPrimaryKey(true)));
+            $this->owner->setAttribute($this->treeAttribute, $this->getPrimaryKeyValue());
         }
 
         $this->owner->setAttribute($this->depthAttribute, $this->rootDepthValue);
