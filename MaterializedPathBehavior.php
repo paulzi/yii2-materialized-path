@@ -511,7 +511,7 @@ class MaterializedPathBehavior extends Behavior
     public function reorderChildren($middle = true)
     {
         /** @var ActiveRecord|SortableBehavior $item */
-        $item = $this->owner->children[0];
+        $item = count($this->owner->children) > 0 ? $this->owner->children[0] : null;
         if ($item) {
             return $item->reorder($middle);
         } else {
