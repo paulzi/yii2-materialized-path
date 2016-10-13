@@ -147,6 +147,10 @@ class MaterializedPathBehaviorTestCase extends BaseTestCase
         $node = MultipleTreeNode::findOne(19);
         $node->populateTree();
         $this->assertEquals(true, $node->isRelationPopulated('children'));
+
+        $node = MultipleTreeNode::findOne(19);
+        $node->populateTree(1);
+        $this->assertEquals(true, $node->isRelationPopulated('children'));
     }
 
     public function testIsRoot()

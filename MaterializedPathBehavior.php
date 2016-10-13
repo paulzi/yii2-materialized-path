@@ -375,12 +375,13 @@ class MaterializedPathBehavior extends Behavior
             $relates[$key][] = $node;
         }
 
+        $ownerDepth = $this->owner->getAttribute($this->depthAttribute);
         $nodes[] = $this->owner;
         foreach ($nodes as $node) {
             $key = $node->getAttribute($this->itemAttribute);
             if (isset($relates[$key])) {
                 $node->populateRelation('children', $relates[$key]);
-            } elseif ($depth === null) {
+            } elseif ($depth === null || $ownerDepth + $depth > $node->getAttribute($this->depthAttribute)) {
                 $node->populateRelation('children', []);
             }
         }
