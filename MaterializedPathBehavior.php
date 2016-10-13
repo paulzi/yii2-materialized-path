@@ -746,9 +746,9 @@ class MaterializedPathBehavior extends Behavior
 
         if ($this->sortable !== false) {
             if ($append) {
-                $this->owner->moveLast();
+                $this->behavior->moveLast();
             } else {
-                $this->owner->moveFirst();
+                $this->behavior->moveFirst();
             }
         }
     }
@@ -776,9 +776,9 @@ class MaterializedPathBehavior extends Behavior
 
         if ($this->sortable !== false) {
             if ($forward) {
-                $this->owner->moveAfter($this->node);
+                $this->behavior->moveAfter($this->node);
             } else {
-                $this->owner->moveBefore($this->node);
+                $this->behavior->moveBefore($this->node);
             }
         }
     }
