@@ -18,7 +18,7 @@ composer require paulzi/yii2-materialized-path
 or add
 
 ```bash
-"paulzi/yii2-materialized-path" : "^2.0"
+"paulzi/yii2-materialized-path" : "^2.1"
 ```
 
 to the `require` section of your `composer.json` file.
