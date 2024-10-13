@@ -139,7 +139,7 @@ class MaterializedPathBehavior extends Behavior
     {
         $path  = $this->getParentPath();
         if ($path !== null) {
-            $paths = explode($this->delimiter, $path);
+            $paths = explode($this->delimiter, (string)$path);
             if (!$this->primaryKeyMode) {
                 $path  = null;
                 $paths = array_map(
@@ -188,7 +188,7 @@ class MaterializedPathBehavior extends Behavior
      */
     public function getRoot()
     {
-        $path = explode($this->delimiter, $this->owner->getAttribute($this->pathAttribute));
+        $path = explode($this->delimiter, (string)$this->owner->getAttribute($this->pathAttribute));
         $path = array_shift($path);
         $tableName = $this->owner->tableName();
         $query = $this->owner->find()
@@ -394,7 +394,7 @@ class MaterializedPathBehavior extends Behavior
      */
     public function isRoot()
     {
-        return count(explode($this->delimiter, $this->owner->getAttribute($this->pathAttribute))) === 1;
+        return count(explode($this->delimiter, (string)$this->owner->getAttribute($this->pathAttribute))) === 1;
     }
 
     /**
@@ -848,7 +848,7 @@ class MaterializedPathBehavior extends Behavior
      */
     protected static function getParentPathInternal($path, $delimiter, $asArray = false)
     {
-        $path = explode($delimiter, $path);
+        $path = explode($delimiter, (string)$path);
         array_pop($path);
         if ($asArray) {
             return $path;
